@@ -226,24 +226,52 @@ fun StatusBadge(label: String, color: Color) {
 
 @Composable
 fun ScoreBar(label: String, score: Float) {
-    val animatedHeight by animateFloatAsState(targetValue = score / 100f, label = "BarHeight")
+    val heightFactor = (score / 100f).coerceIn(0f, 1f)
+    val animatedHeight by animateFloatAsState(targetValue = heightFactor, label = "BarHeight")
 
     Column(
-        modifier = Modifier.fillMaxHeight().width(40.dp),
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(44.dp), 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
-        Text("${score.toInt()}", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "${score.toInt()}",
+            color = Color.White,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
+        )
+        
         Spacer(Modifier.height(4.dp))
+
         Box(
             modifier = Modifier
-                .fillMaxHeight(animatedHeight.coerceAtLeast(0.05f))
-                .width(18.dp)
-                .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                .background(Brush.verticalGradient(colors = listOf(Color(0xFFF8B72C), Color(0xFFFF9100))))
-        )
+                .weight(1f) 
+                .width(18.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight(animatedHeight.coerceAtLeast(0.05f))
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color(0xFFF8B72C), Color(0xFFFF9100))
+                        )
+                    )
+            )
+        }
+
         Spacer(Modifier.height(4.dp))
-        Text(label.take(3).uppercase(), color = Color.Gray, fontSize = 9.sp)
+
+        Text(
+            text = label.take(3).uppercase(),
+            color = Color.Gray,
+            fontSize = 9.sp,
+            maxLines = 1
+        )
     }
 }
 

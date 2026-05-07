@@ -1,4 +1,4 @@
-Here is a simplified version of your **Problem Statement** and **Objectives**, focusing on the most important points for your SlideGenie app.
+
 
 ### **Problem Statement**
 Students today face significant challenges in managing their academic life due to disorganized schedules and scattered study materials. Without a centralized system to track classes and store information, students often experience unnecessary stress and a decrease in learning efficiency, which hinders the goal of achieving **SDG 4: Quality Education**.

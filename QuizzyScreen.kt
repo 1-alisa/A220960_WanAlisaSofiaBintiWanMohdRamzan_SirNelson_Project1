@@ -37,14 +37,15 @@ fun QuizzyScreen(
     viewModel: QuizViewModel
 ) {
     val questions = viewModel.questions
-    var showPlayMode by rememberSaveable { mutableStateOf(false) }
+    // State untuk tukar mode
+    var isPlayMode by rememberSaveable { mutableStateOf(false) }
+
     var questionInput by rememberSaveable { mutableStateOf("") }
     var correctOptionIndex by rememberSaveable { mutableIntStateOf(0) }
     var editingIndex by rememberSaveable { mutableIntStateOf(-1) }
-    val optionsInput = remember { mutableStateListOf("", "") }
 
-    // State untuk skrol (Penyelesaian masalah berterabur masa rotate)
-    val scrollState = rememberScrollState()
+    // Guna snapshotStateList supaya Compose perasan perubahan dalam list
+    val optionsInput = remember { mutableStateListOf("", "") }
 
     Scaffold(
         topBar = {
@@ -53,6 +54,18 @@ fun QuizzyScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
+                    }
+                },
+                // Tambah butang Play di TopBar
+                actions = {
+                    if (questions.isNotEmpty()) {
+                        IconButton(onClick = { isPlayMode = !isPlayMode }) {
+                            Icon(
+                                if (isPlayMode) Icons.Default.Edit else Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = Color(0xFFF8B72C)
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF0A1A3A))
@@ -65,45 +78,61 @@ fun QuizzyScreen(
                 .padding(padding)
                 .background(Brush.verticalGradient(listOf(Color(0xFF0A1A3A), Color.Black)))
                 .padding(12.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
 
-            if (showPlayMode) {
+        ) {
+            if (isPlayMode) {
                 PlayQuizView(questions)
             } else {
-                // Form Input Card
+                // --- FORM INPUT ---
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(Modifier.padding(16.dp)) {
-                        Text(if (editingIndex == -1) "New Question" else "Edit Question", color = Color(0xFFF8B72C), fontWeight = FontWeight.Bold)
-                        TextField(
+                        Text(
+                            text = if (editingIndex == -1) "New Question" else "Edit Question",
+                            color = Color(0xFFF8B72C),
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        OutlinedTextField(
                             value = questionInput,
                             onValueChange = { questionInput = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Enter question...") },
-                            colors = TextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                            label = { Text("Question", color = Color.Gray) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color(0xFFF8B72C)
+                            )
                         )
 
+                        Spacer(Modifier.height(8.dp))
+
                         optionsInput.forEachIndexed { index, text ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            ) {
                                 RadioButton(
                                     selected = correctOptionIndex == index,
                                     onClick = { correctOptionIndex = index },
                                     colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFF8B72C))
                                 )
-                                TextField(
+                                OutlinedTextField(
                                     value = text,
                                     onValueChange = { optionsInput[index] = it },
                                     modifier = Modifier.weight(1f),
                                     placeholder = { Text("Option ${index + 1}") },
-                                    colors = TextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent)
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White
+                                    )
                                 )
                                 if (optionsInput.size > 2) {
                                     IconButton(onClick = { optionsInput.removeAt(index) }) {
-                                        Icon(Icons.Default.Close, null, tint = Color.Red)
+                                        Icon(Icons.Default.Delete, null, tint = Color.Red)
                                     }
                                 }
                             }
@@ -111,15 +140,29 @@ fun QuizzyScreen(
 
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             TextButton(onClick = { optionsInput.add("") }) {
-                                Text("+ OPTION", color = Color(0xFFF8B72C))
+                                Text("+ ADD OPTION", color = Color(0xFFF8B72C))
                             }
                             Button(
                                 onClick = {
-                                    if (questionInput.isNotBlank()) {
-                                        val newQ = FullQuizQuestion(id = System.currentTimeMillis(), question = questionInput, options = optionsInput.toList(), correctIndex = correctOptionIndex)
+                                    if (questionInput.isNotBlank() && optionsInput.all { it.isNotBlank() }) {
+                                        val newQ = FullQuizQuestion(
+                                            id = if (editingIndex == -1) System.currentTimeMillis() else questions[editingIndex].id,
+                                            question = questionInput,
+                                            options = optionsInput.toList(),
+                                            correctIndex = correctOptionIndex
+                                        )
+
                                         if (editingIndex == -1) viewModel.addQuestion(newQ)
-                                        else { viewModel.updateQuestion(editingIndex, newQ); editingIndex = -1 }
-                                        questionInput = ""; optionsInput.clear(); optionsInput.addAll(listOf("", "")); correctOptionIndex = 0
+                                        else {
+                                            viewModel.updateQuestion(editingIndex, newQ)
+                                            editingIndex = -1
+                                        }
+
+                                        // Reset Form
+                                        questionInput = ""
+                                        optionsInput.clear()
+                                        optionsInput.addAll(listOf("", ""))
+                                        correctOptionIndex = 0
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF8B72C))
@@ -130,8 +173,9 @@ fun QuizzyScreen(
                     }
                 }
 
-                // List of Questions (Guna Column biasa supaya tak konflik dengan verticalScroll)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // --- LIST OF QUESTIONS ---
+                Text("Questions List", color = Color.White, modifier = Modifier.padding(bottom = 8.dp))
+                Column(modifier = Modifier.verticalScroll(rememberScrollState()),verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     questions.forEachIndexed { idx, item ->
                         ExpandableQuestionCard(
                             item = item,
@@ -150,7 +194,6 @@ fun QuizzyScreen(
         }
     }
 }
-
 @Composable
 fun ExpandableQuestionCard(item: FullQuizQuestion, onDelete: () -> Unit, onEdit: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }

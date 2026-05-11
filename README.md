@@ -10,7 +10,6 @@ Students often struggle to manage their academic life because schedules and stud
 * Notes and study materials are scattered in different places
 * Poor organization increases academic stress and reduces productivity
 
----
 
 ## Project Objectives
 
@@ -23,7 +22,6 @@ SlideGenie is designed to help students manage their studies more easily through
 * Reduce academic stress through better organization
 * Improve productivity with a simple and user-friendly app
 
----
 
 ## Proposed Solution
 
@@ -37,7 +35,6 @@ SlideGenie is a student productivity mobile application that combines academic t
 * **Study Focus Tools** – Include study timers and break reminders
 * **User-Friendly Interface** – Simple design for easy navigation
 
----
 
 ## Expected Impact
 
